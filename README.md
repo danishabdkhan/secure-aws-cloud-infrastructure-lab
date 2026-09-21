@@ -151,7 +151,7 @@ These troubleshooting exercises helped reinforce how AWS networking, identity, l
 
 **Cloud:** AWS infrastructure deployment, VPC architecture, EC2, S3, IAM
 
-**Networking:** CIDR addressing, subnetting, route tables, internet routing, NAT, DNS, SSH, security groups, network segmentation
+**Networking:** CIDR addressing, subnetting, route tables, internet routing, NAT, SSH, security groups, network segmentation
 
 **Security:** Least privilege, IAM roles and policies, private workloads, controlled administrative access, temporary credentials, audit logging, monitoring, threat detection
 
