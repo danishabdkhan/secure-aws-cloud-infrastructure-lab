@@ -159,10 +159,6 @@ These troubleshooting exercises helped reinforce how AWS networking, identity, l
 
 **Investigation:** CloudTrail event analysis, Athena SQL queries, identity attribution, authorization failure analysis, GuardDuty finding investigation
 
-## Project Documentation
-
-Additional technical documentation and selected validation evidence will be organized in this repository as the project documentation is finalized.
-
 ## Key Takeaways
 
 This project helped bridge the gap between understanding AWS concepts and implementing them in a working environment.
