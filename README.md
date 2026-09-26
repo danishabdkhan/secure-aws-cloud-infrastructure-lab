@@ -44,7 +44,7 @@ During development, I also tested direct SSH and a bastion-style connection path
 
 ## Identity & Least Privilege
 
-I created a custom IAM policy and attached it to an IAM role assigned to an EC2 instance.
+I created a custom IAM policy and attached it to an IAM role assigned to the public EC2 instance.
 
 The role allowed the instance to retrieve an object from a private S3 bucket while denying deletion.
 
