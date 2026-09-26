@@ -116,7 +116,7 @@ This instance became the workload I used to test private-subnet routing and cont
 
 I created a NAT Gateway to provide outbound Internet access for the private subnet without assigning the private EC2 instance a public IPv4 address.
 
-During this process, I also discovered that my public subnet had been relying on the VPC's main route-table association rather than an explicit association. I cleaned up the route-table structure so the intended public and private relationships were clearer.
+During this process, I also noticed an additional route table that I could not initially account for. I reviewed the VPC's route tables, main route table, and subnet associations and cleaned up the associations so the intended public and private routing paths were clearer. However, the additional route table remained, and at the time I was not sure why it was there.
 
 ![VPC resource map during NAT configuration](../screenshots/networking/routing/vpc-resource-map-nat-configuration.png)
 
