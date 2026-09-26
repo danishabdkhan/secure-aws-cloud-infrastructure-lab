@@ -1,6 +1,6 @@
 # Build Journal
 
-This journal documents how I built, tested, troubleshot, and refined the Secure AWS Cloud Infrastructure Lab. Rather than following a perfectly linear deployment path, I used failures and unexpected behavior to better understand how AWS networking, identity, auditing, monitoring, and threat detection work together.
+This journal documents how I built, tested, troubleshot, and refined the Secure AWS Cloud Infrastructure Lab. It covers the implementation process, problems I encountered, how I resolved them, and what I learned along the way.
 
 The final environment is documented in the main project README. This journal focuses on the implementation process and the reasoning behind the changes I made along the way.
 
@@ -18,11 +18,13 @@ My first subnet attempt exposed a more important issue: I did not yet fully unde
 
 ![Corrected VPC CIDR](../screenshots/networking/vpc-subnetting/vpc-cidr-corrected.png)
 
-### Designing the Subnets
+### Creating the Subnets
 
-When I began creating private subnets, I initially reused or selected address ranges that overlapped an existing subnet. AWS rejected the configuration.
+When I began creating the subnets, I initially selected address ranges that overlapped an existing subnet. AWS rejected the configuration.
 
 This helped make the relationship between the VPC address space and its subnet ranges much more concrete: each subnet had to fall inside the VPC CIDR while also occupying a unique, non-overlapping range.
+
+During the initial build, I created one public subnet and two private subnets while working through the network configuration. As the architecture developed, I only needed one of the private subnets for the final lab environment, so the final design uses one public subnet and one private subnet.
 
 ![Subnet CIDR overlap error](../screenshots/networking/vpc-subnetting/subnet-cidr-overlap-error.png)
 
@@ -54,7 +56,7 @@ This part of the build helped me understand that creating subnets alone does not
 
 ### Launching the Public Instance
 
-I launched the first Amazon EC2 instance into the public subnet using Amazon Linux. I enabled a public IPv4 address and initially restricted SSH access in its security group to my current public IP.
+I launched the first EC2 instance into the public subnet using Amazon Linux. I enabled a public IPv4 address and initially restricted SSH access in its security group to my current public IP.
 
 ![Public EC2 launch configuration](../screenshots/networking/connectivity/public-ec2-launch-configuration.png)
 
