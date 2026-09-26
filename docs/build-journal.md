@@ -287,7 +287,7 @@ With the table available in Athena, I wrote a SQL query to locate the `GetObject
 
 ![Athena CloudTrail S3 audit query](../screenshots/cloudtrail-athena/athena-cloudtrail-s3-audit-query.png)
 
-The results showed the successful `GetObject` under the EC2 assumed-role identity and the denied `DeleteObject` under the same identity. This represents the workload identity, which is the IAM identity used by the EC2 instance rather than my administrator IAM user.
+The results showed the successful `GetObject` under the EC2 assumed-role identity and the denied `DeleteObject` under the same workload identity.
 
 ![CloudTrail Athena S3 audit validation](../screenshots/cloudtrail-athena/cloudtrail-athena-s3-audit-validation.png)
 
@@ -308,7 +308,7 @@ Comparing these records with the S3 events helped me distinguish **administrator
 
 ---
 
-## 7. Monitoring the EC2 Instance
+## 7. Monitoring the Workload
 
 ### Validating Native EC2 Metrics
 
