@@ -160,6 +160,8 @@ I traced the problem back through the private routing and NAT configuration. The
 
 I corrected the default route, recreated the NAT Gateway in the public subnet, and updated the private route tables to use the corrected NAT Gateway.
 
+After making these corrections, I also noticed that the additional route table I had encountered earlier was no longer present. I had not intentionally deleted it, so I could not conclusively determine why it disappeared. Rather than assuming a cause, I focused on verifying that the final route table associations and routing configuration matched the intended architecture.
+
 ![VPC routing after NAT correction](../screenshots/networking/routing/vpc-routing-after-nat-correction.png)
 
 I then repeated the same outbound request from the private instance.
