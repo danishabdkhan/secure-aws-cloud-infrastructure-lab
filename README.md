@@ -147,6 +147,54 @@ These troubleshooting exercises helped reinforce how AWS networking, identity, l
 | Threat Detection | Amazon GuardDuty |
 | Operating System | Amazon Linux |
 
+## Validation & Evidence
+
+Security controls and monitoring were validated through hands-on testing rather than configuration alone.
+
+### Least-Privilege IAM Access
+
+An EC2 IAM role was configured with a custom policy allowing the instance to retrieve an object from a private S3 bucket without using static AWS credentials. `GetObject` succeeded, while an attempted `DeleteObject` operation returned `AccessDenied`.
+
+![IAM least-privilege validation](screenshots/iam-s3-least-privilege-validation.png)
+
+CloudTrail data events were then queried with Athena to verify the activity. The audit records captured the successful `GetObject` and denied `DeleteObject` under the EC2 assumed-role identity.
+
+![CloudTrail and Athena audit validation](screenshots/cloudtrail-athena-s3-audit-validation.png)
+
+### Private EC2 Administrative Access
+
+A private EC2 instance with no public IP was accessed through an EC2 Instance Connect Endpoint. Security groups controlled the connection path without requiring direct public SSH access to the private instance.
+
+![EC2 Instance Connect Endpoint configuration](screenshots/eic-endpoint-connection-config.png)
+
+![Private EC2 access](screenshots/private-ec2-eic-access.png)
+
+### Monitoring & Alerting
+
+CloudWatch was used to observe EC2 CPU and network activity. Generated CPU activity produced a visible utilization spike, validating metric collection.
+
+![CloudWatch EC2 metrics](screenshots/cloudwatch-ec2-metrics-validation.png)
+
+The CloudWatch Agent was installed to collect guest-level metrics not included in the default EC2 metrics, including memory utilization.
+
+![CloudWatch Agent memory metric](screenshots/cloudwatch-agent-memory-metric.png)
+
+A CloudWatch alarm was configured against `mem_used_percent` and tested by changing the threshold and observing alarm state behavior.
+
+![CloudWatch memory alarm](screenshots/cloudwatch-memory-alarm-validation.png)
+
+### Threat Detection
+
+GuardDuty was enabled and sample findings were generated to practice investigating AWS threat-detection results. A simulated Critical S3/IAM attack-sequence finding was reviewed by examining severity, affected resources, MITRE ATT&CK mappings, observed API activity, and potential response actions.
+
+> **Note:** The GuardDuty finding shown below is an AWS-generated sample finding used for security investigation practice, not a real compromise.
+
+![GuardDuty Critical sample finding](screenshots/guardduty-critical-finding-overview.png)
+
+## Future Documentation
+
+A detailed build journal covering the implementation process, troubleshooting, design decisions, and additional evidence will be added as the project documentation is finalized.
+
 ## Skills Demonstrated
 
 **Cloud:** AWS infrastructure deployment, VPC architecture, EC2, S3, IAM
