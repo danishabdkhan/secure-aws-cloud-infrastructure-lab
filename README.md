@@ -151,6 +151,14 @@ These troubleshooting exercises helped reinforce how AWS networking, identity, l
 
 Security controls and monitoring were validated through hands-on testing rather than configuration alone.
 
+### Private EC2 Administrative Access
+
+A private EC2 instance with no public IP was accessed through an EC2 Instance Connect Endpoint. Security groups controlled the connection path without requiring direct public SSH access to the private instance.
+
+![EC2 Instance Connect Endpoint configuration](screenshots/eic-endpoint-connection-config.png)
+
+![Private EC2 access](screenshots/private-ec2-eic-access.png)
+
 ### Least-Privilege IAM Access
 
 An EC2 IAM role was configured with a custom policy allowing the instance to retrieve an object from a private S3 bucket without using static AWS credentials. `GetObject` succeeded, while an attempted `DeleteObject` operation returned `AccessDenied`.
@@ -160,14 +168,6 @@ An EC2 IAM role was configured with a custom policy allowing the instance to ret
 CloudTrail data events were then queried with Athena to verify the activity. The audit records captured the successful `GetObject` and denied `DeleteObject` under the EC2 assumed-role identity.
 
 ![CloudTrail and Athena audit validation](screenshots/cloudtrail-athena-s3-audit-validation.png)
-
-### Private EC2 Administrative Access
-
-A private EC2 instance with no public IP was accessed through an EC2 Instance Connect Endpoint. Security groups controlled the connection path without requiring direct public SSH access to the private instance.
-
-![EC2 Instance Connect Endpoint configuration](screenshots/eic-endpoint-connection-config.png)
-
-![Private EC2 access](screenshots/private-ec2-eic-access.png)
 
 ### Monitoring & Alerting
 
