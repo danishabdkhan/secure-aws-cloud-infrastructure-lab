@@ -275,7 +275,7 @@ I also tried creating a CloudTrail Lake event data store. That attempt returned 
 
 ![CloudTrail Lake event data store error](../screenshots/cloudtrail-athena/cloudtrail-lake-event-data-store-error.png)
 
-Rather than treating that path as part of the final architecture, I moved back to CloudTrail and Athena.
+Since I could not proceed with CloudTrail Lake, I returned to CloudTrail and Athena and continued looking for a practical way to query the trail logs.
 
 ### Validating Authorization with CloudTrail and Athena
 
