@@ -4,6 +4,8 @@ This document explains how threat detection is incorporated into the Secure AWS 
 
 GuardDuty adds a threat-detection layer by analyzing AWS data sources and identifying activity that may indicate compromised credentials, suspicious network behavior, unauthorized access, or other security threats.
 
+For its core detection capabilities, GuardDuty analyzes AWS telemetry and data sources such as CloudTrail events, VPC Flow Logs, and DNS logs without requiring a traditional security agent to be installed on the EC2 instances.
+
 For the implementation process, see the [Build Journal](https://github.com/danishabdkhan/secure-aws-cloud-infrastructure-lab/blob/main/docs/build-journal.md). The detailed investigation notes for the GuardDuty sample findings are documented below.
 
 ## GuardDuty
@@ -56,7 +58,7 @@ For a real finding with similar evidence, I would:
 **Finding Type:** Behavior  
 **Affected Resource:** EC2 instance
 
-This sample finding represented an unusually large amount of outbound network traffic from an EC2 instance.
+This sample finding represented an unusually large amount of outbound network traffic from an EC2 instance, with the sample evidence showing outbound SSH traffic to an external destination.
 
 The behavior was significant because a large and unexpected outbound transfer can indicate activity such as data exfiltration or a compromised workload communicating with an external system.
 
@@ -68,7 +70,7 @@ For a real finding with similar evidence, I would:
 - Inspect running processes and active network connections on the instance.
 - Review authentication and system logs for unauthorized access.
 - Rotate potentially exposed credentials.
-- Correlate the activity with network telemetry to determine the source and volume of the traffic.
+- Correlate the activity with VPC Flow Logs and other available network telemetry to determine the source, destination, and volume of the traffic.
 
 The investigation would focus on determining whether the network activity was expected workload behavior or evidence that the instance had been compromised.
 
