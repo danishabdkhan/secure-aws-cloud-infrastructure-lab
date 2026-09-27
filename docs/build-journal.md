@@ -412,6 +412,8 @@ For a real event of this type, I would investigate the affected database identit
 
 Again, these GuardDuty findings were AWS-generated samples used for investigation practice rather than evidence of actual attacks against this lab.
 
+For a more detailed analysis of these findings and the role of GuardDuty in the final architecture, see [Threat Detection](threat-detection.md).
+
 ---
 
 ## 9. What I Learned
