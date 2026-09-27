@@ -24,22 +24,31 @@ Rather than treating the findings only as alerts, I examined what activity cause
 **Finding Type:** AttackSequence  
 **Affected Resources:** S3 buckets
 
-The sample finding represented a sequence of suspicious actions associated with a compromised IAM identity.
+The sample finding represented a sequence of suspicious activity that could indicate compromised AWS credentials and potential data compromise across multiple S3 buckets.
 
-The activity included discovery of S3 resources followed by actions involving CloudTrail, IAM permissions, S3 public-access configuration, and object deletion.
+GuardDuty correlated 14 signals across 5 MITRE ATT&CK tactics into a single attack sequence. The activity included actions such as:
 
-Taken together, the sequence represented a scenario in which compromised credentials could be used to discover resources, reduce visibility, establish additional access, and affect stored data.
+- `ListBuckets` — discovering available S3 resources
+- `DeleteTrail` — attempting to remove audit visibility
+- `AttachUserPolicy` — modifying IAM permissions
+- `PutBucketPublicAccessBlock` — changing S3 public-access controls
+- `DeleteObject` — deleting S3 data
+
+Rather than viewing each API action independently, the finding showed how multiple suspicious actions could be correlated into a broader sequence of activity.
+
+My analysis was that, in a real environment, this combination of discovery, logging changes, permission changes, S3 configuration changes, and object deletion could indicate an attacker using compromised credentials to identify valuable resources, weaken security controls, access or expose data, and interfere with recovery or investigation.
 
 ### Proposed Response
 
-For a real finding with similar evidence, my response would include:
+For a real finding with similar evidence, I would:
 
-- Revoke or rotate the compromised credentials.
-- Restore any logging that had been disabled.
-- Review and remove unauthorized IAM or S3 policy changes.
-- Isolate and investigate the affected S3 resources.
-- Check for evidence of data access or exfiltration.
-- Recover deleted objects through available versioning or backups.
+- Revoke or rotate the credentials associated with the compromised identity.
+- Restore any CloudTrail logging that had been disabled.
+- Review and remove unauthorized IAM policy changes.
+- Restore the intended S3 public-access configuration.
+- Isolate and investigate the affected S3 buckets.
+- Review CloudTrail and other available evidence for unauthorized object access or possible data exfiltration.
+- Recover deleted objects through S3 Versioning or available backups where possible.
 
 ## Finding 2: Unusual EC2 Network Activity
 
