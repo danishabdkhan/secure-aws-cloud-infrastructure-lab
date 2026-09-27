@@ -212,6 +212,8 @@ I also tested whether I could use the existing endpoint to administer the public
 
 At this point, I no longer needed to repeatedly update an allowlist whenever my client public IP changed for these EIC-based connections.
 
+For more detail on the final network architecture, routing, and administrative access design, see [Networking](networking.md).
+
 ---
 
 ## 5. Implementing Least-Privilege Workload Access
@@ -236,6 +238,8 @@ This validated both sides of the policy boundary:
 - a destructive action outside that permission set was denied.
 
 It also gave me hands-on experience using temporary role credentials for an EC2 workload instead of placing long-lived IAM-user credentials on the instance.
+
+For more detail on the final IAM and access-control design, see [Identity and Access](identity-and-access.md).
 
 ---
 
@@ -308,6 +312,8 @@ The results showed the successful `CreateSecurityGroup` and `DeleteSecurityGroup
 
 Comparing these records with the S3 events helped me distinguish **administrator activity performed with my IAM user** from **workload activity performed through an EC2 assumed role**.
 
+For more detail on the final CloudTrail and Athena auditing design, see [Auditing](auditing.md).
+
 ---
 
 ## 7. Monitoring the Workload
@@ -359,6 +365,8 @@ I then changed the threshold to 40%, placing the current memory usage below the 
 ![CloudWatch memory alarm validation](../screenshots/cloudwatch/cloudwatch-memory-alarm-validation.png)
 
 This was an intentional threshold test rather than an automatic remediation event. A future improvement would be to connect monitoring to notification or remediation mechanisms.
+
+For more detail on the final monitoring design, see [Monitoring](monitoring.md).
 
 ---
 
