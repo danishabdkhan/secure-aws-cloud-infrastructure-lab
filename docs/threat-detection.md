@@ -4,7 +4,7 @@ This document explains how threat detection is incorporated into the Secure AWS 
 
 GuardDuty adds a threat-detection layer by analyzing AWS data sources and identifying activity that may indicate compromised credentials, suspicious network behavior, unauthorized access, or other security threats.
 
-For the implementation process and complete investigation notes, see the [Build Journal](build-journal.md).
+For the implementation process, see the [Build Journal](https://github.com/danishabdkhan/secure-aws-cloud-infrastructure-lab/blob/main/docs/build-journal.md). The detailed investigation notes for the GuardDuty sample findings are documented below.
 
 ## GuardDuty
 
