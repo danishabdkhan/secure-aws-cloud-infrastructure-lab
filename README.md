@@ -126,3 +126,15 @@ Building the environment helped me understand how AWS networking, identity, audi
 The most valuable part of the project was troubleshooting configurations and then validating the corrected behavior. Testing routing, IAM authorization, audit records, monitoring data, and security findings gave me a clearer understanding of both how the individual controls work and how they contribute to a broader cloud security architecture.
 
 For the full implementation process and troubleshooting history, see the [Build Journal](docs/build-journal.md).
+
+## In Progress: Generative AI Extension
+
+I am extending this project with Amazon Bedrock to explore generative AI and retrieval-augmented generation (RAG) in an AWS environment. The planned extension will use project documentation and security validation evidence as a knowledge source for an assistant that can answer questions about the architecture, implemented security controls, and observed results.
+
+Planned work includes:
+
+- Integrating Amazon Bedrock with project data stored in Amazon S3
+- Building a knowledge base for retrieval-augmented generation
+- Testing retrieval and generated responses against project documentation
+- Applying least-privilege IAM permissions to the AI components
+- Documenting the architecture, implementation, and validation results
