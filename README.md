@@ -1,214 +1,128 @@
 # Secure AWS Cloud Infrastructure Lab
 
-A hands-on AWS cloud security lab focused on secure network architecture, least-privilege identity and access management, auditing, monitoring, and threat detection.
+A hands-on AWS cloud infrastructure and security lab focused on network segmentation, least-privilege access, secure administration, auditing, monitoring, and threat detection.
 
-This project was built to gain practical experience designing and securing AWS infrastructure beyond certification-level knowledge. I deployed the environment manually, tested security controls, investigated failures, and validated the final configuration through hands-on testing.
-
-![AWS Architecture Diagram](architecture/architecture-diagram.png)
-
-## Project Overview
-
-The environment uses a custom VPC with segmented public and private subnets, controlled administrative access, IAM-based workload permissions, centralized audit logging, system monitoring, and threat detection.
-
-The project demonstrates:
-
-- VPC networking with public and private subnet segmentation
-- Internet Gateway and NAT Gateway routing
-- Security group-based traffic control
-- EC2 Instance Connect Endpoint for administrative SSH access
-- IAM roles and custom least-privilege permissions
-- Private Amazon S3 object access from EC2 without static credentials
-- AWS CloudTrail logging and audit analysis with Amazon Athena
-- Amazon CloudWatch Agent metrics and alarm testing
-- Amazon GuardDuty threat detection and finding investigation
-- Linux and AWS networking troubleshooting
+I built and tested the environment in AWS to apply cloud and security concepts beyond certification study, troubleshoot real configuration issues, and validate that the implemented controls behaved as intended.
 
 ## Architecture
 
-The environment is deployed in `us-east-1` within a `10.0.0.0/16` VPC.
+![Secure AWS Cloud Infrastructure Architecture](architecture/architecture-diagram.png)
 
-### Networking
+The environment is built inside a custom VPC in `us-east-1` with separate public and private subnets.
 
-- **Public subnet (`10.0.0.0/24`)** — Contains a public EC2 instance and NAT Gateway.
-- **Private subnet (`10.0.1.0/24`)** — Contains a private EC2 instance and EC2 Instance Connect Endpoint.
-- **Internet Gateway** — Provides internet connectivity for resources using the public routing path.
-- **NAT Gateway** — Allows resources in the private subnet to initiate outbound internet connections without requiring public IPv4 addresses.
-- **Route tables** — Separate public and private routing paths.
-- **Security groups** — Restrict network access to required traffic.
+- The **public subnet** contains a public EC2 instance and NAT Gateway.
+- The **private subnet** contains a private EC2 instance with no public IPv4 address.
+- An **Internet Gateway** provides the public internet path.
+- The **NAT Gateway** provides outbound internet connectivity for the private instance.
+- **EC2 Instance Connect Endpoint** provides the final administrative-access path.
+- **Security groups** restrict traffic between resources.
+
+## Security and Design Decisions
+
+### Network Segmentation
+
+I separated public and private resources using dedicated subnets and route tables.
+
+The private EC2 instance has no public IPv4 address and reaches the internet outbound through the NAT Gateway rather than receiving direct public internet exposure.
 
 ### Secure Administrative Access
 
-Administrative SSH access was configured using an **EC2 Instance Connect Endpoint** with security-group-controlled access.
+I used EC2 Instance Connect Endpoint as the final administrative-access method for the EC2 instances.
 
-During development, I also tested direct SSH and a bastion-style connection path. The final design uses the EIC Endpoint to provide administrative connectivity without relying on a bastion host for private-instance access.
+During development, I also tested direct SSH and a bastion-host approach before moving to the endpoint-based design.
 
-## Identity & Least Privilege
+### Least-Privilege Workload Access
 
-I created a custom IAM policy and attached it to an IAM role assigned to the public EC2 instance.
+The public EC2 instance uses an IAM role with a custom policy to access a private S3 bucket.
 
-The role allowed the instance to retrieve an object from a private S3 bucket while denying deletion.
+I validated the permissions directly from the instance:
 
-Validation:
+`GetObject → Allowed`
 
-- `GetObject` → **Success**
-- `DeleteObject` → **AccessDenied**
+`DeleteObject → AccessDenied`
 
-The EC2 workload accessed S3 through temporary role credentials rather than statically configured AWS access keys.
+The workload uses temporary role credentials rather than statically configured AWS access keys.
 
-This demonstrated practical use of:
+### Auditing
 
-- IAM roles for EC2
-- Custom IAM policies
-- Least-privilege permissions
-- Temporary AWS credentials
-- Authorization testing
+I configured CloudTrail with S3 data event logging and stored the trail logs in S3.
 
-## Auditing with CloudTrail and Athena
+Using Athena, I queried the audit records and verified:
 
-AWS CloudTrail was configured to record AWS API activity, including S3 object-level data events used in the authorization test.
+- Successful `GetObject` activity under the EC2 assumed-role identity
+- Denied `DeleteObject` activity under the same workload identity
+- Security-group administration under my IAM user identity
 
-CloudTrail logs were delivered to an S3 log bucket and queried using Amazon Athena.
+This provided a practical way to distinguish administrator activity from workload activity.
 
-The audit investigation confirmed:
+### Monitoring
 
-- Successful `GetObject` activity performed through the EC2 assumed-role identity
-- Denied `DeleteObject` activity associated with the same assumed role
-- Administrative security-group activity attributed to my IAM user
+I used CloudWatch to monitor EC2 CPU and network metrics and installed the CloudWatch Agent to collect guest OS memory utilization.
 
-This provided a practical example of distinguishing human administrative activity from workload activity during an audit investigation.
-
-## Monitoring with CloudWatch
-
-I used Amazon CloudWatch to monitor the EC2 environment and tested both AWS-provided EC2 metrics and additional guest operating system metrics.
-
-Testing included:
-
-- CPU utilization
-- Network traffic
-- Memory utilization
-- CloudWatch Agent configuration
-- Custom alarm thresholds
-- Alarm state transitions
-
-I installed and configured the CloudWatch Agent on the EC2 instance to publish guest OS metrics such as memory utilization, then created and tested a CloudWatch alarm.
-
-## Threat Detection with GuardDuty
-
-Amazon GuardDuty was enabled to provide threat detection using AWS telemetry and supported data sources.
-
-I generated sample GuardDuty findings and practiced investigating detections by examining:
-
-1. Severity
-2. Finding type
-3. Affected resources
-4. Observed activity and evidence
-5. Appropriate response actions
-
-Sample scenarios included:
-
-- Suspicious IAM/S3 activity
-- Unusually high EC2 network traffic
-- Unusual RDS authentication activity
-
-The findings were simulated and used for investigation practice rather than representing real compromises of the environment.
-
-## Troubleshooting and Lessons Learned
-
-A significant part of this project involved diagnosing configuration and connectivity problems rather than simply following a predefined deployment path.
-
-Examples included:
-
-- Correcting VPC CIDR and overlapping subnet configurations
-- Fixing route table associations
-- Troubleshooting SSH access after a changing client public IP
-- Restricting SSH after temporarily testing broader connectivity
-- Configuring security-group references for instance-to-instance access
-- Diagnosing failed outbound connectivity from the private EC2 instance
-- Correcting NAT Gateway and private default-route configuration
-- Configuring EC2 Instance Connect Endpoint access
-- Learning the distinction between CloudTrail management events and S3 data events
-- Querying CloudTrail logs with Athena instead of manually inspecting raw log files
-- Accounting for EC2 basic monitoring metric publication intervals
-- Installing the CloudWatch Agent for guest OS telemetry
-
-These troubleshooting exercises helped reinforce how AWS networking, identity, logging, and monitoring components interact in a real environment.
-
-## AWS Services Used
-
-| Category | Services / Technologies |
-| --- | --- |
-| Networking | Amazon VPC, Subnets, Route Tables, Internet Gateway, NAT Gateway |
-| Compute | Amazon EC2 |
-| Administrative Access | EC2 Instance Connect Endpoint, SSH |
-| Identity & Access | AWS IAM, IAM Roles, Custom IAM Policies |
-| Storage | Amazon S3 |
-| Auditing | AWS CloudTrail, Amazon Athena |
-| Monitoring | Amazon CloudWatch, CloudWatch Agent, CloudWatch Alarms |
-| Threat Detection | Amazon GuardDuty |
-| Operating System | Amazon Linux |
-
-## Validation & Evidence
-
-Security controls and monitoring were validated through hands-on testing rather than configuration alone.
-
-### Private EC2 Administrative Access
-
-A private EC2 instance with no public IP was accessed through an EC2 Instance Connect Endpoint. Security groups controlled the connection path without requiring direct public SSH access to the private instance.
-
-![EC2 Instance Connect Endpoint configuration](screenshots/eic-endpoint-connection-config.png)
-
-![Private EC2 access](screenshots/private-ec2-eic-access.png)
-
-### Least-Privilege IAM Access
-
-An EC2 IAM role was configured with a custom policy allowing the instance to retrieve an object from a private S3 bucket without using static AWS credentials. `GetObject` succeeded, while an attempted `DeleteObject` operation returned `AccessDenied`.
-
-![IAM least-privilege validation](screenshots/iam-s3-least-privilege-validation.png)
-
-CloudTrail data events were then queried with Athena to verify the activity. The audit records captured the successful `GetObject` and denied `DeleteObject` under the EC2 assumed-role identity.
-
-![CloudTrail and Athena audit validation](screenshots/cloudtrail-athena-s3-audit-validation.png)
-
-### Monitoring & Alerting
-
-CloudWatch was used to observe EC2 CPU and network activity. Generated CPU activity produced a visible utilization spike, validating metric collection.
-
-![CloudWatch EC2 metrics](screenshots/cloudwatch-ec2-metrics-validation.png)
-
-The CloudWatch Agent was installed to collect guest-level metrics not included in the default EC2 metrics, including memory utilization.
-
-![CloudWatch Agent memory metric](screenshots/cloudwatch-agent-memory-metric.png)
-
-A CloudWatch alarm was configured against `mem_used_percent` and tested by changing the threshold and observing alarm state behavior.
-
-![CloudWatch memory alarm](screenshots/cloudwatch-memory-alarm-validation.png)
+I also created a memory alarm and validated its transition between `ALARM` and `OK` as the configured threshold changed.
 
 ### Threat Detection
 
-GuardDuty was enabled and sample findings were generated to practice investigating AWS threat-detection results. A simulated Critical S3/IAM attack-sequence finding was reviewed by examining severity, affected resources, MITRE ATT&CK mappings, observed API activity, and potential response actions.
+I enabled GuardDuty and investigated AWS-provided sample findings representing:
 
-> **Note:** The GuardDuty finding shown below is an AWS-generated sample finding used for security investigation practice, not a real compromise.
+- An S3/IAM attack sequence
+- Unusual EC2 network activity
+- Unusual RDS authentication
 
-![GuardDuty Critical sample finding](screenshots/guardduty-critical-finding-overview.png)
+The findings were simulated rather than real compromises of the environment. I used them to practice moving from detection to evidence review, analysis, and proposed response actions.
 
-## Future Documentation
+## Key Validations
 
-A detailed build journal covering the implementation process, troubleshooting, design decisions, and additional evidence will be added as the project documentation is finalized.
+| Control | Validation |
+|---|---|
+| Private networking | Private EC2 reached the internet outbound through the NAT Gateway without a public IPv4 address |
+| Administrative access | Connected to EC2 through EC2 Instance Connect Endpoint |
+| Least privilege | `GetObject` succeeded while `DeleteObject` returned `AccessDenied` |
+| Identity attribution | CloudTrail distinguished IAM-user activity from EC2 assumed-role activity |
+| Audit investigation | Queried CloudTrail records using Athena |
+| Infrastructure monitoring | Observed EC2 CPU and network metrics in CloudWatch |
+| Guest OS monitoring | Published memory utilization through the CloudWatch Agent |
+| Alerting | Validated CloudWatch alarm state changes |
+| Threat detection | Investigated three GuardDuty sample-finding scenarios |
+
+## AWS Services Used
+
+`VPC` • `EC2` • `IAM` • `S3` • `CloudTrail` • `Athena` • `CloudWatch` • `GuardDuty`
+
+Supporting networking components include Internet Gateway, NAT Gateway, route tables, security groups, and EC2 Instance Connect Endpoint.
+
+## Technical Documentation
+
+More detailed documentation is available in [`docs/`](docs/):
+
+- [Build Journal](docs/build-journal.md) — chronological implementation, troubleshooting, testing, and lessons learned
+- [Networking](docs/networking.md) — final network architecture, routing, and administrative-access design
+- [Identity and Access](docs/identity-and-access.md) — IAM roles, least privilege, workload identity, and access model
+- [Auditing](docs/auditing.md) — CloudTrail, S3 data events, Athena queries, and identity attribution
+- [Monitoring](docs/monitoring.md) — EC2 metrics, CloudWatch Agent, and alarms
+- [Threat Detection](docs/threat-detection.md) — GuardDuty design and detailed sample-finding investigations
+
+Supporting validation evidence is organized by topic in [`screenshots/`](screenshots/).
 
 ## Skills Demonstrated
 
-**Cloud:** AWS infrastructure deployment, VPC architecture, EC2, S3, IAM
+- AWS network architecture and VPC segmentation
+- Public and private subnet routing
+- Security groups and controlled administrative access
+- IAM roles and least-privilege policy design
+- Temporary AWS credentials for EC2 workloads
+- CloudTrail auditing and S3 data event logging
+- SQL-based CloudTrail investigation with Athena
+- CloudWatch infrastructure and guest OS monitoring
+- CloudWatch Agent configuration and alarms
+- GuardDuty finding analysis and incident-response reasoning
+- Linux networking and AWS troubleshooting
+- Technical documentation and architecture communication
 
-**Networking:** CIDR addressing, subnetting, route tables, internet routing, NAT, SSH, security groups, network segmentation
+## What I Learned
 
-**Security:** Least privilege, IAM roles and policies, private workloads, controlled administrative access, temporary credentials, audit logging, monitoring, threat detection
+Building the environment helped me understand how AWS networking, identity, auditing, monitoring, and threat detection work together rather than viewing each service independently.
 
-**Operations:** Linux administration, AWS troubleshooting, CloudWatch metrics and alarms
+The most valuable part of the project was troubleshooting configurations and then validating the corrected behavior. Testing routing, IAM authorization, audit records, monitoring data, and security findings gave me a clearer understanding of both how the individual controls work and how they contribute to a broader cloud security architecture.
 
-**Investigation:** CloudTrail event analysis, Athena SQL queries, identity attribution, authorization failure analysis, GuardDuty finding investigation
-
-## Key Takeaways
-
-This project helped bridge the gap between understanding AWS concepts and implementing them in a working environment.
-
-The most valuable part of the lab was troubleshooting how multiple AWS services interact. Building the environment required understanding not only what individual services do, but how routing, security groups, IAM authorization, logging, monitoring, and threat detection work together as part of a secure cloud environment.
+For the full implementation process and troubleshooting history, see the [Build Journal](docs/build-journal.md).
