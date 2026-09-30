@@ -446,3 +446,68 @@ Some of the most useful troubleshooting sequences were:
 The project also changed how I approach cloud troubleshooting. A resource existing in the console does not prove that the system works. I learned to validate behavior from multiple layers: route tables and security groups in AWS, commands from inside the instances, authorization results from the workload, audit records in CloudTrail, metrics in CloudWatch, and findings in GuardDuty.
 
 The final result is a working lab, but the troubleshooting process is what gave me the strongest understanding of how the individual AWS services interact.
+
+---
+
+## 10. Generative AI Extension with Amazon Bedrock
+
+After completing the original cloud security lab, I extended the project with Amazon Bedrock to build a retrieval-augmented generation (RAG) assistant over the project's own technical documentation.
+
+### Building the Knowledge Base
+
+I created a dedicated S3 location containing six project documents covering networking, identity and access, auditing, monitoring, threat detection, and the build history.
+
+I created a Bedrock Knowledge Base using this documentation as its data source. The documents were parsed and chunked, converted into embeddings, and stored in a managed vector store for semantic retrieval.
+
+![Bedrock Knowledge Base](../screenshots/bedrock/knowledge-base.png)
+
+I tested the Knowledge Base from the AWS console by asking project-specific questions. For example, the assistant successfully explained how the EC2 workload's allowed S3 read operation and denied delete operation were validated and cited the relevant project documentation.
+
+![Grounded RAG response with project sources](../screenshots/bedrock/grounded-rag-response.png)
+
+### Building the Python RAG Client
+
+I built `src/query_knowledge_base.py` using Python, Boto3, and the Bedrock Agent Runtime API so the assistant could be queried outside the AWS console.
+
+The client:
+
+- accepts project questions from the command line;
+- sends them through the Bedrock retrieval and generation workflow;
+- streams the generated response;
+- extracts citation metadata from the returned results; and
+- displays the project documents used as sources.
+
+I moved configuration such as the Knowledge Base ID into environment variables rather than hardcoding it in the application.
+
+![Python RAG client](../screenshots/bedrock/python-rag-client.png)
+
+### Applying Least-Privilege Access
+
+I reviewed the IAM permissions created for the Knowledge Base and narrowed its S3 object access from the entire bucket to only the `project-docs/` corpus prefix.
+
+I also created a dedicated IAM role for the Python RAG client rather than testing the final application workflow using my broader administrative identity. The role contains only the permissions needed for the Bedrock query and response-generation workflow.
+
+![Least-privilege RAG client IAM role](../screenshots/bedrock/rag-client-role.png)
+
+I assumed this role using temporary AWS credentials and verified with STS that the Python client was running under the restricted role before successfully querying the Knowledge Base.
+
+### Evaluating the RAG System
+
+I tested the assistant with several types of questions rather than validating it with only one successful example:
+
+- **Specific retrieval and synthesis:** explained how S3 read access and the denied delete operation were validated.
+- **Cross-document synthesis:** combined information from multiple project documents to explain how the security controls worked together.
+- **Troubleshooting retrieval:** recovered networking problems and their resolutions from the build history.
+- **Unsupported premise:** correctly identified that the project did not deploy AWS Lambda functions instead of inventing an implementation.
+
+The tests showed that the system could retrieve project-specific information, synthesize information across documents, provide source attribution, and reject an unsupported premise.
+
+I also observed that generated responses still require technical review. Retrieval quality and foundation-model output are not guaranteed to be correct, so source attribution and validation against the underlying documentation remain important.
+
+### What I Learned from the Extension
+
+Building the RAG extension helped me understand the difference between simply sending a prompt to a foundation model and grounding generation in project-specific information.
+
+The most useful parts were seeing the full RAG workflow from S3 documentation through chunking, embeddings, semantic retrieval, generation, and source attribution, and then treating the Python client as an AWS workload that needed its own least-privilege identity.
+
+It also reinforced a lesson from the original infrastructure lab: a system should be validated through its actual behavior rather than assumed to work because the resources exist in the AWS console.
