@@ -1,8 +1,8 @@
 # Secure AWS Cloud Infrastructure Lab
 
-A hands-on AWS cloud infrastructure and security lab focused on network segmentation, least-privilege access, secure administration, auditing, monitoring, and threat detection.
+A hands-on AWS cloud infrastructure, security, and generative AI project focused on network segmentation, least-privilege access, secure administration, auditing, monitoring, threat detection, and retrieval-augmented generation (RAG).
 
-I built and tested the environment in AWS to apply cloud and security concepts beyond certification study, troubleshoot real configuration issues, and validate that the implemented controls behaved as intended.
+I built and tested the environment in AWS to apply cloud and security concepts beyond certification study, troubleshoot real configuration issues, and validate that the implemented controls behaved as intended. I later extended the environment with Amazon Bedrock to build a RAG assistant that answers questions about the project's architecture, security controls, validation evidence, and troubleshooting history using the project's own documentation.
 
 ## Architecture
 
@@ -84,10 +84,13 @@ The findings were simulated rather than real compromises of the environment. I u
 | Guest OS monitoring | Published memory utilization through the CloudWatch Agent |
 | Alerting | Validated CloudWatch alarm state changes |
 | Threat detection | Investigated three GuardDuty sample-finding scenarios |
+| RAG retrieval and generation | Retrieved relevant project documentation and generated grounded answers with source attribution |
+| Cross-document reasoning | Answered questions requiring information from multiple project documents |
+| Unsupported-premise handling | Correctly identified that an unsupported AWS Lambda implementation was not present rather than inventing one |
 
 ## AWS Services Used
 
-`VPC` • `EC2` • `IAM` • `S3` • `CloudTrail` • `Athena` • `CloudWatch` • `GuardDuty`
+`VPC` • `EC2` • `IAM` • `S3` • `CloudTrail` • `Athena` • `CloudWatch` • `GuardDuty` • `Bedrock`
 
 Supporting networking components include Internet Gateway, NAT Gateway, route tables, security groups, and EC2 Instance Connect Endpoint.
 
@@ -101,6 +104,7 @@ More detailed documentation is available in [`docs/`](docs/):
 - [Auditing](docs/auditing.md) — CloudTrail, S3 data events, Athena queries, and identity attribution
 - [Monitoring](docs/monitoring.md) — EC2 metrics, CloudWatch Agent, and alarms
 - [Threat Detection](docs/threat-detection.md) — GuardDuty design and detailed sample-finding investigations
+- [Generative AI Extension](docs/generative-ai.md) — Bedrock Knowledge Base, RAG workflow, Python/Boto3 client, least-privilege IAM, evaluation, and limitations
 
 Supporting validation evidence is organized by topic in [`screenshots/`](screenshots/).
 
@@ -118,6 +122,11 @@ Supporting validation evidence is organized by topic in [`screenshots/`](screens
 - GuardDuty finding analysis and incident-response reasoning
 - Linux networking and AWS troubleshooting
 - Technical documentation and architecture communication
+- Retrieval-augmented generation (RAG) with Amazon Bedrock
+- Semantic retrieval and grounded response generation
+- Python/Boto3 integration with AWS services
+- Least-privilege IAM for an application client using temporary credentials
+- RAG evaluation and unsupported-premise testing
 
 ## What I Learned
 
@@ -127,14 +136,31 @@ The most valuable part of the project was troubleshooting configurations and the
 
 For the full implementation process and troubleshooting history, see the [Build Journal](docs/build-journal.md).
 
-## In Progress: Generative AI Extension
+## Generative AI Extension
 
-I am extending this project with Amazon Bedrock to explore generative AI and retrieval-augmented generation (RAG) in an AWS environment. The planned extension will use project documentation and security validation evidence as a knowledge source for an assistant that can answer questions about the architecture, implemented security controls, and observed results.
+I extended the project with Amazon Bedrock to build a retrieval-augmented generation (RAG) assistant over the project's own technical documentation.
 
-Planned work includes:
+Six project documents are stored under a dedicated Amazon S3 prefix and ingested into a Bedrock Knowledge Base. The documents are parsed, chunked, embedded, and stored in a managed vector store for semantic retrieval. For each question, relevant project context is retrieved and supplied to a managed foundation model to generate a grounded response with source attribution.
 
-- Integrating Amazon Bedrock with project data stored in Amazon S3
-- Building a knowledge base for retrieval-augmented generation
-- Testing retrieval and generated responses against project documentation
-- Applying least-privilege IAM permissions to the AI components
-- Documenting the architecture, implementation, and validation results
+I also built a Python/Boto3 command-line client in [`src/query_knowledge_base.py`](src/query_knowledge_base.py) to query the assistant outside the AWS console. The client streams generated responses and maps Bedrock citations back to the project documents used as sources.
+
+### Security
+
+I reviewed the IAM permissions automatically created for the Bedrock Knowledge Base and narrowed its S3 object access from the entire bucket to only the `project-docs/` corpus prefix.
+
+For the Python client, I created a dedicated IAM role with only the permissions required to query the Bedrock Knowledge Base and invoke the managed response-generation workflow. I tested the client using temporary credentials from the assumed role rather than relying on my broader administrative identity or long-lived application credentials.
+
+### Evaluation
+
+I tested the RAG system against several types of questions:
+
+- **Specific retrieval and synthesis:** explained how the EC2 workload's S3 read access and denied delete operation were validated
+- **Cross-document synthesis:** combined information from multiple project documents to explain how security controls worked together
+- **Troubleshooting retrieval:** recovered project-specific networking problems and their resolutions from the build history
+- **Unsupported premise:** correctly identified that the project did not deploy AWS Lambda functions rather than inventing an implementation
+
+The tests demonstrated useful semantic retrieval, cross-document synthesis, source attribution, and resistance to an unsupported premise. Generated responses still require technical review because retrieval quality and foundation-model output are not guaranteed to be correct.
+
+For the implementation, IAM design, evaluation results, and limitations, see [Generative AI Extension](docs/generative-ai.md).
+
+Curated implementation and validation evidence is available in [`screenshots/bedrock/`](screenshots/bedrock/).
