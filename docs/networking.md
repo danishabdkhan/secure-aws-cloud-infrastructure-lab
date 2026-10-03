@@ -1,6 +1,6 @@
 # Networking
 
-This document explains the final networking design of the Secure AWS Cloud Infrastructure Lab. For the implementation process, troubleshooting, and changes that led to this architecture, see the [Build Journal](build-journal.md).
+This document explains the networking design of the original Secure AWS Cloud Infrastructure Lab environment. For the implementation process, troubleshooting, and changes that led to this architecture, see the [Build Journal](build-journal.md).
 
 ## Architecture
 
@@ -20,7 +20,7 @@ The final network uses:
 | EIC Endpoint | Administrative access to EC2 instances |
 | Security Groups | Instance and endpoint traffic control |
 
-![Secure AWS Cloud Infrastructure Architecture](../architecture/architecture-diagram.png)
+![Secure AWS Cloud Infrastructure V1 Architecture](../architecture/v1-architecture-diagram.png)
 
 ## Public Subnet
 
