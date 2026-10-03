@@ -6,9 +6,11 @@ I built and tested the environment in AWS to apply cloud and security concepts b
 
 ## Architecture
 
-![Secure AWS Cloud Infrastructure Architecture](architecture/architecture-diagram.png)
+![Secure AWS Cloud Infrastructure Architecture](architecture/extended-architecture-diagram.png)
 
-The environment is built inside a custom VPC in `us-east-1` with separate public and private subnets.
+The current architecture combines the original secure AWS infrastructure with a generative AI / RAG extension built using Amazon Bedrock.
+
+The infrastructure is deployed in `us-east-1` and uses a custom VPC with separate public and private subnets.
 
 - The **public subnet** contains a public EC2 instance and NAT Gateway.
 - The **private subnet** contains a private EC2 instance with no public IPv4 address.
@@ -16,6 +18,10 @@ The environment is built inside a custom VPC in `us-east-1` with separate public
 - The **NAT Gateway** provides outbound internet connectivity for the private instance.
 - **EC2 Instance Connect Endpoint** provides the final administrative-access path.
 - **Security groups** restrict traffic between resources.
+
+The RAG extension uses project documentation stored in S3 as a knowledge source for a Bedrock Knowledge Base. A Python/Boto3 client allows a user to ask questions about the project outside the AWS console. Bedrock retrieves relevant information from the project documentation, provides that context to a foundation model, and returns a grounded answer with the source documents used.
+
+The original infrastructure architecture before the generative AI extension is preserved in [`architecture/v1-architecture-diagram.png`](architecture/v1-architecture-diagram.png).
 
 ## Security and Design Decisions
 
@@ -86,7 +92,7 @@ The findings were simulated rather than real compromises of the environment. I u
 | Threat detection | Investigated three GuardDuty sample-finding scenarios |
 | RAG retrieval and generation | Retrieved relevant project documentation and generated grounded answers with source attribution |
 | Cross-document reasoning | Answered questions requiring information from multiple project documents |
-| Unsupported-premise handling | Correctly identified that an unsupported AWS Lambda implementation was not present rather than inventing one |
+| Unsupported-information handling | Correctly recognized that no AWS Lambda functions were deployed rather than making up an answer |
 
 ## AWS Services Used
 
@@ -130,19 +136,25 @@ Supporting validation evidence is organized by topic in [`screenshots/`](screens
 
 ## What I Learned
 
-Building the environment helped me understand how AWS networking, identity, auditing, monitoring, and threat detection work together rather than viewing each service independently.
+Building the original environment helped me understand how AWS networking, identity, auditing, monitoring, and threat detection work together rather than viewing each service independently.
 
-The most valuable part of the project was troubleshooting configurations and then validating the corrected behavior. Testing routing, IAM authorization, audit records, monitoring data, and security findings gave me a clearer understanding of both how the individual controls work and how they contribute to a broader cloud security architecture.
+The most valuable part of the infrastructure work was troubleshooting configurations and then validating the corrected behavior. Testing routing, IAM authorization, audit records, monitoring data, and security findings gave me a clearer understanding of both how the individual controls work and how they contribute to a broader cloud security architecture.
+
+Extending the project with RAG also gave me hands-on experience connecting generative AI to project-specific information. I learned how documentation can be ingested, converted into embeddings, retrieved based on a user's question, and supplied as context to a foundation model. Building the Python/Boto3 client also helped me understand how an application can interact programmatically with managed AWS AI services while still using least-privilege IAM and temporary credentials.
 
 For the full implementation process and troubleshooting history, see the [Build Journal](docs/build-journal.md).
 
 ## Generative AI Extension
 
-I extended the project with Amazon Bedrock to build a retrieval-augmented generation (RAG) assistant over the project's own technical documentation.
+I extended the project with Amazon Bedrock to build a retrieval-augmented generation (RAG) assistant that can answer questions about the project based on its own technical documentation.
 
-Six project documents are stored under a dedicated Amazon S3 prefix and ingested into a Bedrock Knowledge Base. The documents are parsed, chunked, embedded, and stored in a managed vector store for semantic retrieval. For each question, relevant project context is retrieved and supplied to a managed foundation model to generate a grounded response with source attribution.
+A foundation model on its own has no knowledge of how this specific project was designed, secured, tested, or troubleshot. The RAG system addresses this by retrieving relevant information from the project's documentation and providing that context to a foundation model before an answer is generated.
 
-I also built a Python/Boto3 command-line client in [`src/query_knowledge_base.py`](src/query_knowledge_base.py) to query the assistant outside the AWS console. The client streams generated responses and maps Bedrock citations back to the project documents used as sources.
+Six project documents covering networking, identity and access, auditing, monitoring, threat detection, and the full build process are stored under a dedicated S3 prefix and ingested into a Bedrock Knowledge Base. The documents are parsed, chunked, converted into embeddings, and indexed in a managed vector store for semantic retrieval.
+
+I also built a Python/Boto3 command-line client in [`src/query_knowledge_base.py`](src/query_knowledge_base.py) to use the RAG system outside of the AWS console. A user can enter a question about the project through the client, which sends the query to Bedrock. Bedrock retrieves relevant information from the project documentation, provides that context to a foundation model, and returns a grounded answer along with the source documents used.
+
+The client uses the standard AWS credential provider chain rather than storing credentials in the source code.
 
 ### Security
 
@@ -157,9 +169,9 @@ I tested the RAG system against several types of questions:
 - **Specific retrieval and synthesis:** explained how the EC2 workload's S3 read access and denied delete operation were validated
 - **Cross-document synthesis:** combined information from multiple project documents to explain how security controls worked together
 - **Troubleshooting retrieval:** recovered project-specific networking problems and their resolutions from the build history
-- **Unsupported premise:** correctly identified that the project did not deploy AWS Lambda functions rather than inventing an implementation
+- **Unsupported information:** correctly recognized that no AWS Lambda functions were deployed rather than making up an answer
 
-The tests demonstrated useful semantic retrieval, cross-document synthesis, source attribution, and resistance to an unsupported premise. Generated responses still require technical review because retrieval quality and foundation-model output are not guaranteed to be correct.
+The tests demonstrated useful semantic retrieval, cross-document synthesis, source attribution, and the ability to recognize information that was not supported by the project documentation. Generated responses still require technical review because retrieval quality and foundation-model output are not guaranteed to be correct.
 
 For the implementation, IAM design, evaluation results, and limitations, see [Generative AI Extension](docs/generative-ai.md).
 
