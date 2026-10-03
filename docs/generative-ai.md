@@ -6,16 +6,19 @@ This project was extended with Amazon Bedrock to build a retrieval-augmented gen
 
 The assistant uses the project's own documentation as its knowledge source rather than relying only on a foundation model's general knowledge.
 
+![Generative AI / RAG Extension Architecture](../architecture/generative-ai-rag-extension.png)
+
 ## Architecture
 
 The RAG workflow consists of:
 
-1. Project documentation stored in Amazon S3
+1. Project documentation stored under a dedicated Amazon S3 prefix
 2. An Amazon Bedrock Knowledge Base that parses and chunks the documents
 3. Managed embeddings and vector storage for semantic retrieval
-4. Retrieval of relevant project documentation for each question
-5. A managed foundation model that generates a response using the retrieved context
-6. Source attribution showing which project documents supported the response
+4. A Python/Boto3 client that submits project questions to Bedrock
+5. Retrieval of relevant project documentation for each question
+6. A managed foundation model that generates a response using the retrieved context
+7. Source attribution showing which project documents supported the response
 
 The initial knowledge source contains:
 
@@ -28,7 +31,9 @@ The initial knowledge source contains:
 
 ## Python Interface
 
-A Python client in `src/query_knowledge_base.py` queries the Bedrock Knowledge Base using Boto3.
+The RAG system can be queried outside the AWS console through a Python/Boto3 command-line client in [`src/query_knowledge_base.py`](../src/query_knowledge_base.py).
+
+A user can enter a question about the project through the client, which sends the query to Bedrock. Bedrock retrieves relevant information from the project documentation, provides that context to a foundation model, and returns a grounded response along with the project documents used as sources.
 
 The client:
 
@@ -42,11 +47,15 @@ The client:
 
 ## IAM and Least-Privilege Access
 
-The Python client was validated using a dedicated IAM role with only the permissions required to query the Bedrock Knowledge Base and generate the response.
+The RAG extension uses separate IAM roles for the Bedrock Knowledge Base and the Python client.
+
+The Knowledge Base role is restricted to the S3 documentation it needs to ingest. Its S3 object access was narrowed from the entire bucket to only the `project-docs/` corpus prefix.
+
+The Python client uses a separate IAM role with only the permissions required to query the Bedrock Knowledge Base and generate a response.
 
 The development IAM user assumes this restricted role through AWS STS. The application then runs using temporary role credentials rather than long-lived credentials stored in the project.
 
-This allowed the RAG workflow to be tested independently of the broader administrative permissions used to build the AWS environment.
+This separates the permissions required for knowledge ingestion, application access, and broader environment administration.
 
 ## Evaluation
 
@@ -80,15 +89,15 @@ The response retrieved project-specific troubleshooting history, including regio
 
 The response also preserved uncertainty around an unexplained route-table observation rather than inventing a cause.
 
-### Test 4: Unsupported-Premise / Hallucination Test
+### Test 4: Unsupported Information
 
-**Question:** What Kubernetes security controls were implemented in this project?
+**Question:** What AWS Lambda functions were deployed in this project, and what did each function do?
 
 **Result:** PASS
 
-The assistant correctly identified that the project documentation did not show Kubernetes or Amazon EKS being deployed and did not invent Kubernetes security controls.
+The assistant correctly recognized that the project documentation did not show any AWS Lambda functions being deployed and did not make up an implementation.
 
-Instead, it distinguished the unsupported premise from the AWS security controls that were actually implemented.
+Instead, it identified that the requested information was not supported by the project documentation.
 
 ## Limitations
 
