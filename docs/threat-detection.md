@@ -6,7 +6,7 @@ GuardDuty adds a threat-detection layer by analyzing AWS data sources and identi
 
 For its core detection capabilities, GuardDuty analyzes AWS telemetry and data sources such as CloudTrail events, VPC Flow Logs, and DNS logs without requiring a traditional security agent to be installed on the EC2 instances.
 
-For the implementation process, see the [Build Journal](https://github.com/danishabdkhan/secure-aws-cloud-infrastructure-lab/blob/main/docs/build-journal.md). The detailed investigation notes for the GuardDuty sample findings are documented below.
+For the implementation process, see the [Build Journal](build-journal.md). The detailed investigation notes for the GuardDuty sample findings are documented below.
 
 ## GuardDuty
 
