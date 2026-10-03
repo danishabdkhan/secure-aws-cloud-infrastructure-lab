@@ -1,12 +1,14 @@
 # Identity and Access
 
-This document explains how identity and access are handled in the Secure AWS Cloud Infrastructure Lab. The design separates administrator access from EC2 workload permissions and uses AWS-managed temporary credentials instead of static access keys.
+This document explains the identity and access design of the original AWS infrastructure. The design separates administrator access from EC2 workload permissions and uses AWS-managed temporary credentials instead of static access keys.
+
+Identity and access for the generative AI / RAG extension, including its dedicated Bedrock and application roles, are documented separately in [Generative AI Extension](generative-ai.md).
 
 For the implementation and testing process, see the [Build Journal](build-journal.md).
 
 ## Access Model
 
-The environment uses two different types of identity:
+The original infrastructure uses two primary types of identity:
 
 | Identity | Purpose |
 |---|---|
@@ -89,7 +91,7 @@ The identity and access design applies several security principles:
 
 ## Design Summary
 
-The final access model separates human administration from workload authorization.
+The original infrastructure's access model separates human administration from workload authorization.
 
 The administrator identity manages the AWS environment, while the EC2 instance assumes an IAM role for its permitted S3 access. The role allows the required read operation while denying the tested delete operation, and no static AWS access keys are required on the instance.
 
